@@ -68,7 +68,8 @@ module AWS4
     def canonical_request
       parts = []
       parts << method
-      parts << uri.path + "\n"
+      parts << uri.path
+      parts << uri.query
       parts << headers.sort.map {|k, v| [k.downcase,v].join(':')}.join("\n") + "\n"
       parts << headers.sort.map {|k, v| k.downcase}.join(";")
       parts << hexdigest(body || '')
