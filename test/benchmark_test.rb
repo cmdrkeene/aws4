@@ -1,13 +1,13 @@
 # encoding: UTF-8
 require 'minitest/spec'
 require 'minitest/autorun'
-require 'aws4/signature'
+require 'aws4/signer'
 require "benchmark"
 
 describe "benchmark" do
   it "runs quickly" do
     trials = 10_000
-    signature = AWS4::Signature.new(
+    signer = AWS4::Signer.new(
       access_key: "AKIDEXAMPLE",
       secret_key: "wJalrXUtnFEMI/K7MDENG+bPxRfiCYEXAMPLEKEY",
       region: "us-east-1",
@@ -23,7 +23,7 @@ describe "benchmark" do
 
     t = Benchmark.realtime do
       trials.times do
-        signed = signature.sign("POST", uri, headers, body)
+        signed = signer.sign("POST", uri, headers, body)
       end
     end
     puts "#{(trials/t).round(1)} signatures/second (#{((t/trials.to_f)*1000).round(3)}ms/signature)"

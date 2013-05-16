@@ -5,7 +5,7 @@ require "uri"
 require "pathname"
 
 module AWS4
-  class Signature
+  class Signer
     attr_reader :access_key, :secret_key, :region
     attr_reader :date, :method, :uri, :headers, :body
 
@@ -37,7 +37,7 @@ module AWS4
       parts = []
       parts << "AWS4-HMAC-SHA256 Credential=#{access_key}/#{credential_string}"
       parts << "SignedHeaders=#{headers.keys.map(&:downcase).sort.join(";")}"
-      parts << "Signature=#{signature}"
+      parts << "Signer=#{signature}"
       parts.join(', ')
     end
 
