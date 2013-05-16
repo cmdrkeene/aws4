@@ -19,7 +19,7 @@ module AWS4
       @uri = uri
       @headers = headers
       @body = body
-      @date = Time.parse(headers["Date"]).utc.strftime("%Y%m%dT%H%M%SZ")
+      @date = Time.parse(headers["Date"] || headers["DATE"] || headers["date"]).utc.strftime("%Y%m%dT%H%M%SZ")
       signed = headers.dup
       signed['Authorization'] = authorization(headers)
       signed
