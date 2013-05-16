@@ -72,7 +72,7 @@ module AWS4
       parts << method
       parts << uri.path
       parts << uri.query
-      parts << headers.sort.map {|k, v| [k.downcase,v].join(':')}.join("\n") + "\n"
+      parts << headers.sort.map {|k, v| [k.downcase,v.strip].join(':')}.join("\n") + "\n"
       parts << headers.sort.map {|k, v| k.downcase}.join(";")
       parts << hexdigest(body || '')
       s = parts.join("\n")

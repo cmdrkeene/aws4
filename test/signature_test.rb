@@ -52,6 +52,20 @@ describe AWS4::Signature do
     signed["Authorization"].must_equal("AWS4-HMAC-SHA256 Credential=AKIDEXAMPLE/20110909/us-east-1/host/aws4_request, SignedHeaders=date;host, Signature=830cc36d03f0f84e6ee4953fbe701c1c8b71a0372c63af9255aa364dd183281e")
   end
 
+  it "signs get-header-value-trim" do
+    uri = URI("http://host.foo.com/")
+    headers = {
+      "Host" => "host.foo.com",
+      "Date" => "Mon, 09 Sep 2011 23:36:00 GMT",
+      "p" => " phfft "
+    }
+    body = ""
+    signed = signature.sign("POST", uri, headers, body)
+    signed["Date"].must_equal("Mon, 09 Sep 2011 23:36:00 GMT")
+    signed["Host"].must_equal("host.foo.com")
+    signed["Authorization"].must_equal("AWS4-HMAC-SHA256 Credential=AKIDEXAMPLE/20110909/us-east-1/host/aws4_request, SignedHeaders=date;host;p, Signature=debf546796015d6f6ded8626f5ce98597c33b47b9164cf6b17b4642036fcb592")
+  end
+
   it "signs get-vanilla-query-order" do
     uri = URI("http://host.foo.com/?foo=Zoo&foo=aha")
     headers = {
