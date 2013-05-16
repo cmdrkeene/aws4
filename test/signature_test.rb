@@ -26,6 +26,58 @@ describe AWS4::Signature do
     signed["Authorization"].must_equal("AWS4-HMAC-SHA256 Credential=AKIDEXAMPLE/20110909/us-east-1/host/aws4_request, SignedHeaders=date;host, Signature=b27ccfbfa7df52a200ff74193ca6e32d4b48b8856fab7ebf1c595d0670a7e470")
   end
 
+  it "signs get-relative" do
+    uri = URI("http://host.foo.com/foo/..")
+    headers = {
+      "Host" => "host.foo.com",
+      "Date" => "Mon, 09 Sep 2011 23:36:00 GMT"
+    }
+    body = ""
+    signed = signature.sign("GET", uri, headers, body)
+    signed["Date"].must_equal("Mon, 09 Sep 2011 23:36:00 GMT")
+    signed["Host"].must_equal("host.foo.com")
+    signed["Authorization"].must_equal("AWS4-HMAC-SHA256 Credential=AKIDEXAMPLE/20110909/us-east-1/host/aws4_request, SignedHeaders=date;host, Signature=b27ccfbfa7df52a200ff74193ca6e32d4b48b8856fab7ebf1c595d0670a7e470")
+  end
+
+  it "signs get-relative-relative" do
+    uri = URI("http://host.foo.com/foo/bar/../..")
+    headers = {
+      "Host" => "host.foo.com",
+      "Date" => "Mon, 09 Sep 2011 23:36:00 GMT"
+    }
+    body = ""
+    signed = signature.sign("GET", uri, headers, body)
+    signed["Date"].must_equal("Mon, 09 Sep 2011 23:36:00 GMT")
+    signed["Host"].must_equal("host.foo.com")
+    signed["Authorization"].must_equal("AWS4-HMAC-SHA256 Credential=AKIDEXAMPLE/20110909/us-east-1/host/aws4_request, SignedHeaders=date;host, Signature=b27ccfbfa7df52a200ff74193ca6e32d4b48b8856fab7ebf1c595d0670a7e470")
+  end
+
+  it "signs get-slash-pointless-dot" do
+    uri = URI("http://host.foo.com/./foo")
+    headers = {
+      "Host" => "host.foo.com",
+      "Date" => "Mon, 09 Sep 2011 23:36:00 GMT"
+    }
+    body = ""
+    signed = signature.sign("GET", uri, headers, body)
+    signed["Date"].must_equal("Mon, 09 Sep 2011 23:36:00 GMT")
+    signed["Host"].must_equal("host.foo.com")
+    signed["Authorization"].must_equal("AWS4-HMAC-SHA256 Credential=AKIDEXAMPLE/20110909/us-east-1/host/aws4_request, SignedHeaders=date;host, Signature=910e4d6c9abafaf87898e1eb4c929135782ea25bb0279703146455745391e63a")
+  end
+
+  it "signs get-slash" do
+    uri = URI("http://host.foo.com//")
+    headers = {
+      "Host" => "host.foo.com",
+      "Date" => "Mon, 09 Sep 2011 23:36:00 GMT"
+    }
+    body = ""
+    signed = signature.sign("GET", uri, headers, body)
+    signed["Date"].must_equal("Mon, 09 Sep 2011 23:36:00 GMT")
+    signed["Host"].must_equal("host.foo.com")
+    signed["Authorization"].must_equal("AWS4-HMAC-SHA256 Credential=AKIDEXAMPLE/20110909/us-east-1/host/aws4_request, SignedHeaders=date;host, Signature=b27ccfbfa7df52a200ff74193ca6e32d4b48b8856fab7ebf1c595d0670a7e470")
+  end
+
   it "signs get-vanilla-empty-query" do
     uri = URI("http://host.foo.com/?foo=bar")
     headers = {
@@ -77,6 +129,19 @@ describe AWS4::Signature do
     signed["Date"].must_equal("Mon, 09 Sep 2011 23:36:00 GMT")
     signed["Host"].must_equal("host.foo.com")
     signed["Authorization"].must_equal("AWS4-HMAC-SHA256 Credential=AKIDEXAMPLE/20110909/us-east-1/host/aws4_request, SignedHeaders=date;host, Signature=be7148d34ebccdc6423b19085378aa0bee970bdc61d144bd1a8c48c33079ab09")
+  end
+
+  it "signs get-vanilla-query-order-key" do
+    uri = URI("http://host.foo.com/?a=foo&b=foo")
+    headers = {
+      "Host" => "host.foo.com",
+      "Date" => "Mon, 09 Sep 2011 23:36:00 GMT"
+    }
+    body = ""
+    signed = signature.sign("GET", uri, headers, body)
+    signed["Date"].must_equal("Mon, 09 Sep 2011 23:36:00 GMT")
+    signed["Host"].must_equal("host.foo.com")
+    signed["Authorization"].must_equal("AWS4-HMAC-SHA256 Credential=AKIDEXAMPLE/20110909/us-east-1/host/aws4_request, SignedHeaders=date;host, Signature=0dc122f3b28b831ab48ba65cb47300de53fbe91b577fe113edac383730254a3b")
   end
 
   it "signs get-vanilla-utf8-query" do

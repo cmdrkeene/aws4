@@ -1,7 +1,8 @@
 # encoding: UTF-8
 require "openssl"
 require "time"
-require "open-uri"
+require "uri"
+require "pathname"
 
 module AWS4
   class Signature
@@ -70,7 +71,7 @@ module AWS4
     def canonical_request
       parts = []
       parts << method
-      parts << uri.path
+      parts << Pathname.new(uri.path).cleanpath.to_s
       parts << uri.query
       parts << headers.sort.map {|k, v| [k.downcase,v.strip].join(':')}.join("\n") + "\n"
       parts << headers.sort.map {|k, v| k.downcase}.join(";")
