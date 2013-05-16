@@ -132,6 +132,21 @@ describe AWS4::Signature do
     signed["Authorization"].must_equal("AWS4-HMAC-SHA256 Credential=AKIDEXAMPLE/20110909/us-east-1/host/aws4_request, SignedHeaders=date;host;zoo, Signature=273313af9d0c265c531e11db70bbd653f3ba074c1009239e8559d3987039cad7")
   end
 
+  it "signs post-x-www-form-urlencoded" do
+    uri = URI("http://host.foo.com/")
+    headers = {
+      "Host" => "host.foo.com",
+      "Date" => "Mon, 09 Sep 2011 23:36:00 GMT",
+      "Content-Type" => "application/x-www-form-urlencoded"
+    }
+    body = "foo=bar"
+    signed = signature.sign("POST", uri, headers, body)
+    signed["Date"].must_equal("Mon, 09 Sep 2011 23:36:00 GMT")
+    signed["Host"].must_equal("host.foo.com")    
+    signed["Content-Type"].must_equal("application/x-www-form-urlencoded")
+    signed["Authorization"].must_equal("AWS4-HMAC-SHA256 Credential=AKIDEXAMPLE/20110909/us-east-1/host/aws4_request, SignedHeaders=content-type;date;host, Signature=5a15b22cf462f047318703b92e6f4f38884e4a7ab7b1d6426ca46a8bd1c26cbc")
+  end
+
   it "signs post-x-www-form-urlencoded-parameters" do
     uri = URI("http://host.foo.com/")
     headers = {
@@ -143,6 +158,7 @@ describe AWS4::Signature do
     signed = signature.sign("POST", uri, headers, body)
     signed["Date"].must_equal("Mon, 09 Sep 2011 23:36:00 GMT")
     signed["Host"].must_equal("host.foo.com")    
+    signed["Content-Type"].must_equal("application/x-www-form-urlencoded; charset=utf8")
     signed["Authorization"].must_equal("AWS4-HMAC-SHA256 Credential=AKIDEXAMPLE/20110909/us-east-1/host/aws4_request, SignedHeaders=content-type;date;host, Signature=b105eb10c6d318d2294de9d49dd8b031b55e3c3fe139f2e637da70511e9e7b71")
   end
 end
