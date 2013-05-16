@@ -53,6 +53,19 @@ describe AWS4::Signature do
     signed["Authorization"].must_equal("AWS4-HMAC-SHA256 Credential=AKIDEXAMPLE/20110909/us-east-1/host/aws4_request, SignedHeaders=date;host, Signature=830cc36d03f0f84e6ee4953fbe701c1c8b71a0372c63af9255aa364dd183281e")
   end
 
+  it "signs get-vanilla-query-order" do
+    uri = URI("http://host.foo.com/?foo=Zoo&foo=aha")
+    headers = {
+      "Host" => "host.foo.com",
+      "Date" => "Mon, 09 Sep 2011 23:36:00 GMT"
+    }
+    body = ""
+    signed = signature.sign("GET", uri, headers, body)
+    signed["Date"].must_equal("Mon, 09 Sep 2011 23:36:00 GMT")
+    signed["Host"].must_equal("host.foo.com")
+    signed["Authorization"].must_equal("AWS4-HMAC-SHA256 Credential=AKIDEXAMPLE/20110909/us-east-1/host/aws4_request, SignedHeaders=date;host, Signature=be7148d34ebccdc6423b19085378aa0bee970bdc61d144bd1a8c48c33079ab09")
+  end
+
   it "signs post-vanilla" do
     uri = URI("http://host.foo.com/")
     headers = {
@@ -77,6 +90,20 @@ describe AWS4::Signature do
     signed = signature.sign("POST", uri, headers, body)
     signed["Date"].must_equal("Mon, 09 Sep 2011 23:36:00 GMT")
     signed["Host"].must_equal("host.foo.com")    
-    signed["Authorization"].must_equal("AWS4-HMAC-SHA256 Credential=AKIDEXAMPLE/20110909/us-east-1/host/aws4_request, SignedHeaders=date;host;zoo, Signature=b7a95a52518abbca0964a999a880429ab734f35ebbf1235bd79a5de87756dc4a")        
+    signed["Authorization"].must_equal("AWS4-HMAC-SHA256 Credential=AKIDEXAMPLE/20110909/us-east-1/host/aws4_request, SignedHeaders=date;host;zoo, Signature=b7a95a52518abbca0964a999a880429ab734f35ebbf1235bd79a5de87756dc4a")
+  end
+
+  it "signs post-header-value-case" do
+    uri = URI("http://host.foo.com/")
+    headers = {
+      "Host" => "host.foo.com",
+      "Date" => "Mon, 09 Sep 2011 23:36:00 GMT",
+      "zoo" => "ZOOBAR"
+    }
+    body = ""
+    signed = signature.sign("POST", uri, headers, body)
+    signed["Date"].must_equal("Mon, 09 Sep 2011 23:36:00 GMT")
+    signed["Host"].must_equal("host.foo.com")    
+    signed["Authorization"].must_equal("AWS4-HMAC-SHA256 Credential=AKIDEXAMPLE/20110909/us-east-1/host/aws4_request, SignedHeaders=date;host;zoo, Signature=273313af9d0c265c531e11db70bbd653f3ba074c1009239e8559d3987039cad7")
   end
 end
