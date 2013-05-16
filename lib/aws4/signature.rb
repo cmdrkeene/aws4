@@ -15,16 +15,19 @@ module AWS4
       @region = config[:region] || config["region"]
     end
 
-    def sign(method, uri, headers, body)
+    def sign(method, uri, headers, body, debug = false)
       @method = method.upcase
       @uri = uri
       @headers = headers
       @body = body
       @date = Time.parse(headers["Date"] || headers["DATE"] || headers["date"]).utc.strftime("%Y%m%dT%H%M%SZ")
+      dump if debug
       signed = headers.dup
       signed['Authorization'] = authorization(headers)
       signed
     end
+
+    private
 
     def service
       @uri.host.split(".", 2)[0]
@@ -53,10 +56,7 @@ module AWS4
       parts << date
       parts << credential_string
       parts << hexdigest(canonical_request)
-      s = parts.join("\n")
-      puts "string to sign", s
-      puts
-      s
+      parts.join("\n")
     end
 
     def credential_string
@@ -76,10 +76,7 @@ module AWS4
       parts << headers.sort.map {|k, v| [k.downcase,v.strip].join(':')}.join("\n") + "\n"
       parts << headers.sort.map {|k, v| k.downcase}.join(";")
       parts << hexdigest(body || '')
-      s = parts.join("\n")
-      puts "canonical request", s
-      puts
-      s
+      parts.join("\n")
     end
 
     def hexdigest(value)
@@ -94,6 +91,14 @@ module AWS4
 
     def hexhmac(key, value)
       OpenSSL::HMAC.hexdigest(OpenSSL::Digest::Digest.new('sha256'), key, value)
+    end
+
+    def dump
+      puts "string to sign"
+      puts string_to_sign
+      puts "canonical_request"
+      puts canonical_request
+      puts "authorization"
     end
   end
 end
