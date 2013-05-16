@@ -1,8 +1,7 @@
+# encoding: UTF-8
 require 'minitest/spec'
 require 'minitest/autorun'
 require 'aws4/signature'
-require 'net/http'
-require 'uri'
 
 describe AWS4::Signature do
   def signature
@@ -64,6 +63,19 @@ describe AWS4::Signature do
     signed["Date"].must_equal("Mon, 09 Sep 2011 23:36:00 GMT")
     signed["Host"].must_equal("host.foo.com")
     signed["Authorization"].must_equal("AWS4-HMAC-SHA256 Credential=AKIDEXAMPLE/20110909/us-east-1/host/aws4_request, SignedHeaders=date;host, Signature=be7148d34ebccdc6423b19085378aa0bee970bdc61d144bd1a8c48c33079ab09")
+  end
+
+  it "signs get-vanilla-utf8-query" do
+    uri = URI(URI::encode("http://host.foo.com/?ሴ=bar"))
+    headers = {
+      "Host" => "host.foo.com",
+      "Date" => "Mon, 09 Sep 2011 23:36:00 GMT"
+    }
+    body = ""
+    signed = signature.sign("GET", uri, headers, body)
+    signed["Date"].must_equal("Mon, 09 Sep 2011 23:36:00 GMT")
+    signed["Host"].must_equal("host.foo.com")
+    signed["Authorization"].must_equal("AWS4-HMAC-SHA256 Credential=AKIDEXAMPLE/20110909/us-east-1/host/aws4_request, SignedHeaders=date;host, Signature=6fb359e9a05394cc7074e0feb42573a2601abc0c869a953e8c5c12e4e01f1a8c")
   end
 
   it "signs post-vanilla" do

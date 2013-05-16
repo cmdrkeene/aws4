@@ -1,5 +1,7 @@
+# encoding: UTF-8
 require "openssl"
 require "time"
+require "open-uri"
 
 module AWS4
   class Signature
