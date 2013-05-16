@@ -19,7 +19,6 @@ You MUST supply a `Date` header.
       "Content-Type" => "application/json; charset=utf8"
     }
     body="{}"
-    
 
     # sign headers
     headers = signer.sign("POST", uri, headers, body)
