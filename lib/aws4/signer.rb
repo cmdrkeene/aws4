@@ -6,8 +6,9 @@ require "pathname"
 
 module AWS4
   class Signer
+    RFC8601BASIC = "%Y%m%dT%H%M%SZ"
     attr_reader :access_key, :secret_key, :region
-    attr_reader :date, :method, :uri, :headers, :body
+    attr_reader :date, :method, :uri, :headers, :body, :service
 
     def initialize(config)
       @access_key = config[:access_key] || config["access_key"]
@@ -20,7 +21,9 @@ module AWS4
       @uri = uri
       @headers = headers
       @body = body
-      @date = Time.parse(headers["Date"] || headers["DATE"] || headers["date"]).utc.strftime("%Y%m%dT%H%M%SZ")
+      @service = @uri.host.split(".", 2)[0]
+      date_header = headers["Date"] || headers["DATE"] || headers["date"]
+      @date = (date_header ? Time.parse(date_header) : Time.now).utc.strftime(RFC8601BASIC)
       dump if debug
       signed = headers.dup
       signed['Authorization'] = authorization(headers)
@@ -29,60 +32,53 @@ module AWS4
 
     private
 
-    def service
-      @uri.host.split(".", 2)[0]
-    end
-
     def authorization(headers)
-      parts = []
-      parts << "AWS4-HMAC-SHA256 Credential=#{access_key}/#{credential_string}"
-      parts << "SignedHeaders=#{headers.keys.map(&:downcase).sort.join(";")}"
-      parts << "Signature=#{signature}"
-      parts.join(', ')
+      [
+        "AWS4-HMAC-SHA256 Credential=#{access_key}/#{credential_string}",
+        "SignedHeaders=#{headers.keys.map(&:downcase).sort.join(";")}",
+        "Signature=#{signature}"
+      ].join(', ')
     end
 
     def signature
-      k_secret = secret_key
-      k_date = hmac("AWS4" + k_secret, date[0,8])
+      k_date = hmac("AWS4" + secret_key, date[0,8])
       k_region = hmac(k_date, region)
       k_service = hmac(k_region, service)
-      k_credentials = hmac(k_service, 'aws4_request')
+      k_credentials = hmac(k_service, "aws4_request")
       hexhmac(k_credentials, string_to_sign)
     end
 
     def string_to_sign
-      parts = []
-      parts << 'AWS4-HMAC-SHA256'
-      parts << date
-      parts << credential_string
-      parts << hexdigest(canonical_request)
-      parts.join("\n")
+      [
+        'AWS4-HMAC-SHA256',
+        date,
+        credential_string,
+        hexdigest(canonical_request)
+      ].join("\n")
     end
 
     def credential_string
-      parts = []
-      parts << date[0,8]
-      parts << region
-      parts << service
-      parts << 'aws4_request'
-      parts.join("/")
+      [
+        date[0,8],
+        region,
+        service,
+        "aws4_request"
+      ].join("/")
     end
 
     def canonical_request
-      parts = []
-      parts << method
-      parts << Pathname.new(uri.path).cleanpath.to_s
-      parts << uri.query
-      parts << headers.sort.map {|k, v| [k.downcase,v.strip].join(':')}.join("\n") + "\n"
-      parts << headers.sort.map {|k, v| k.downcase}.join(";")
-      parts << hexdigest(body || '')
-      parts.join("\n")
+      [
+        method,
+        Pathname.new(uri.path).cleanpath.to_s,
+        uri.query,
+        headers.sort.map {|k, v| [k.downcase,v.strip].join(':')}.join("\n") + "\n",
+        headers.sort.map {|k, v| k.downcase}.join(";"),
+        hexdigest(body || '')
+      ].join("\n")
     end
 
     def hexdigest(value)
-      digest = Digest::SHA256.new
-      digest.update(value)
-      digest.hexdigest
+      Digest::SHA256.new.update(value).hexdigest
     end
 
     def hmac(key, value)
