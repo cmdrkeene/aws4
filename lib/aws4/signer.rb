@@ -37,7 +37,7 @@ module AWS4
       parts = []
       parts << "AWS4-HMAC-SHA256 Credential=#{access_key}/#{credential_string}"
       parts << "SignedHeaders=#{headers.keys.map(&:downcase).sort.join(";")}"
-      parts << "Signer=#{signature}"
+      parts << "Signature=#{signature}"
       parts.join(', ')
     end
 
