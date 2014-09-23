@@ -16,12 +16,12 @@ module AWS4
       @region = config[:region] || config["region"]
     end
 
-    def sign(method, uri, headers, body, debug = false)
+    def sign(method, uri, headers, body, debug = false, service_name=nil)
       @method = method.upcase
       @uri = uri
       @headers = headers
       @body = body
-      @service = @uri.host.split(".", 2)[0]
+      @service = service_name || @uri.host.split(".", 2)[0]
       date_header = headers["Date"] || headers["DATE"] || headers["date"]
       @date = (date_header ? Time.parse(date_header) : Time.now).utc.strftime(RFC8601BASIC)
       dump if debug
