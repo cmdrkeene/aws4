@@ -22,6 +22,10 @@ It is designed to be library agnostic.
     # sign headers
     headers = signer.sign("POST", uri, headers, body)
 
+## Test
+
+    bundle install && rake test
+
 ## License
 
 The MIT License (MIT)
